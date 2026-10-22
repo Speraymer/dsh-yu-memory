@@ -1,0 +1,64 @@
+{
+  "name": "dsh-yu-memory",
+  "version": "0.2.1",
+  "description": "DSH 全局长期记忆：让所有普通新对话共享可恢复、可解释的本机记忆。",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Speraymer/dsh-yu-memory.git"
+  },
+  "homepage": "https://github.com/Speraymer/dsh-yu-memory#readme",
+  "bugs": {
+    "url": "https://github.com/Speraymer/dsh-yu-memory/issues"
+  },
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "lib",
+    "README.md",
+    "LICENSE",
+    "NOTICE.md"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "dsh": ">=0.1.7-rc.1",
+    "node": ">=22"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "slots"
+      ],
+      "external": [
+        "react"
+      ]
+    },
+    "基于": "https://github.com/Yuuyuko-uu/dsh-fish-memory"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": "*",
+    "@deepseek-ai/dsh-llm": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    }
+  }
+}

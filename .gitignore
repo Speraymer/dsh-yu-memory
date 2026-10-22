@@ -1,0 +1,43 @@
+# 依赖与虚拟环境
+node_modules/
+.venv/
+venv/
+
+# 构建产物
+dist/
+coverage/
+*.tsbuildinfo
+
+# 日志与临时文件
+*.log
+*.tmp
+*.temp
+*.bak
+*.bak.*
+*~
+*.swp
+.DS_Store
+Thumbs.db
+
+# 本插件的运行数据（会话片段、召回流水等）
+*.jsonl
+chat.jsonl
+traces.json
+store.json
+store.json.*
+config.json
+diag.log
+backups/
+data/
+out/
+
+# 本地配置与凭证
+.env
+.env.*
+!.env.example
+secrets.json
+credentials.json
+*.local.json
+*.pem
+*.key
+*.p12
