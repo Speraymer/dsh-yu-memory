@@ -1,5 +1,5 @@
 window.__ModuleLoader__.load({
-  id: 'dsh-global-memory',
+  id: 'dsh-yu-memory',
   factory: (require) => {
     const React = require('react')
     const h = React.createElement
