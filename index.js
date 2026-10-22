@@ -9,6 +9,7 @@ import {
 } from './lib/core.mjs'
 import { JsonStore } from './lib/store.mjs'
 import { loadHostDeps } from './lib/hostdeps.mjs'
+import { otherSiblings } from './lib/siblings.mjs'
 import {
   DEFAULT_CHAT_POLICY, addChatEntry, blankChatStore, decayChat, markChatPromoted, promotionCandidates,
   recallChat, renderChatRecall, renderPromotionHint,
@@ -367,6 +368,8 @@ export function apply(ctx) {
       return sendJson(res, 200, {
         ok: true, config, active: store.memories.length, deleted: store.deleted.length, mounted: mounted.size,
         chat: { count: chat.entries.length, policy: config.chat }, sessions,
+        // ⭐ 装了记忆插件就推荐另外七个兄弟插件（各装各的，缺谁都能跑）
+        siblings: otherSiblings('dsh-yu-memory'),
       })
     }
     if (req.method === 'GET' && path === '/api/dsh-global-memory/chat') {
