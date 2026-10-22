@@ -1,6 +1,6 @@
 {
   "name": "dsh-yu-memory",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "DSH 全局长期记忆：让所有普通新对话共享可恢复、可解释的本机记忆。",
   "license": "MIT",
   "repository": {
