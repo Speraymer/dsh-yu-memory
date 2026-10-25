@@ -10,6 +10,8 @@ import {
 import { JsonStore } from './lib/store.mjs'
 import { loadHostDeps } from './lib/hostdeps.mjs'
 import { otherSiblings } from './lib/siblings.mjs'
+import { apply as applyMemoryGraph } from './lib/graph-host.mjs'
+import { isGraphInjected } from './lib/source.mjs'
 import {
   DEFAULT_CHAT_POLICY, addChatEntry, blankChatStore, decayChat, markChatPromoted, promotionCandidates,
   recallChat, renderChatRecall, renderPromotionHint,
@@ -25,7 +27,7 @@ const tokenizer = createTokenizer(
 )
 
 export const name = 'global-memory'
-export const inject = ['agents', 'timer', 'webServer', 'llm']
+export const inject = ['agents', 'timer', 'webServer', 'llm', 'sessions', 'sessionController', 'attachments', 'web', 'tools', 'commands', 'systemPrompt', 'approval']
 
 function diag(message) {
   try { appendFileSync(join(root, 'diag.log'), `${new Date().toISOString()} ${cleanText(message, 500)}\n`, 'utf8') } catch {}
@@ -151,7 +153,12 @@ async function askModel(ctx, agent, config, memory) {
 
 function toolResult(ok, message, extra = {}) { return { ok, message, ...extra } }
 
-export function apply(ctx) {
+export async function apply(ctx) {
+  try {
+    await applyMemoryGraph(ctx, { mountPrefix: '/memory-graph', trustedHosts: [], whyTools: false, whyPrompt: false })
+  } catch (error) {
+    diag(`memory graph unavailable error=${error?.message || error}`)
+  }
   let store = files.read('store.json', blankStore())
   let config = files.read('config.json', blankConfig())
   let traces = files.read('traces.json', { version: 1, traces: [] })
@@ -256,11 +263,19 @@ export function apply(ctx) {
 
   const mount = (agent, sid) => {
     let lastText = ''
+    let graphContext = ''
+    let graphManagedTurn = false
     const disposers = []
     const dispose = (x) => { if (typeof x === 'function') disposers.push(x); else if (x?.off) disposers.push(() => x.off()) }
     try {
       dispose(agent.ctx.on('agent/inbox/inserted', (payload) => {
-        const text = textOfMessage(payload?.message || payload)
+        const message = payload?.message || payload
+        const text = textOfMessage(message)
+        if (isGraphInjected(message)) {
+          graphManagedTurn = true
+          graphContext = text.slice(0, 200000)
+          return
+        }
         if (!text || text.length > 4000) return
         lastText = text
         speech.observe(text, tokenizer)
@@ -270,6 +285,7 @@ export function apply(ctx) {
         try {
           if (!config.chat?.enabled) return
           if (!lastText) return
+          if (graphManagedTurn) return
           const reply = lastAssistantText(agent.session)
           const entry = addChatEntry(chat, {
             sessionId: sid, user: lastText.slice(0, 1000), reply: reply.slice(0, 1000), policy: config.chat,
@@ -279,13 +295,14 @@ export function apply(ctx) {
           saveChat()
           diag(`chat add sid=${sid} id=${entry.id} importance=${entry.importance}`)
         } catch (error) { diag(`chat add failed error=${error?.message || error}`) }
+        finally { lastText = ''; graphContext = ''; graphManagedTurn = false }
       }))
       // ⭐ 对话记忆：这一轮把相关的前文带回来（只带资料，不覆盖现在的说法）
       dispose(agent.ctx.systemPrompt.context({
         name: 'chat-memory', order: 902,
         text: () => {
           try {
-            if (!config.chat?.enabled || !lastText) return ''
+            if (!config.chat?.enabled || !lastText || graphManagedTurn) return ''
             decayChat(chat, Date.now(), config.chat.halfLifeDays)
             const result = recallChat(chat, lastText, Date.now(), config.chat, tokenizer)
             saveChat()
@@ -308,15 +325,18 @@ export function apply(ctx) {
           try {
             if (!lastText) return ''
             const result = recall(store, lastText, Date.now(), config, tokenizer, speech)
+            const selected = graphManagedTurn && graphContext
+              ? result.selected.filter((x) => !graphContext.includes(cleanText(x.m?.text, 400)))
+              : result.selected
             traces.traces.push({
               at: Date.now(), sessionId: sid, query: lastText.slice(0, 200),
-              gate: result.gate, picked: result.selected.map((x) => x.m.id),
+              gate: result.gate, picked: selected.map((x) => x.m.id),
               rows: result.scored.slice(0, 24).map((x) => ({ id: x.m.id, C: +x.C.toFixed(3), P: +x.P.toFixed(3), omission: x.omission })),
             })
             if (traces.traces.length > 100) traces.traces = traces.traces.slice(-100)
             saveTraces()
-            diag(`recall session=${sid} picked=${result.selected.length}`)
-            return renderRecall(result.selected)
+            diag(`recall session=${sid} picked=${selected.length}`)
+            return renderRecall(selected)
           } catch (error) {
             diag(`recall failed session=${sid} error=${error?.message || error}`)
             return ''
