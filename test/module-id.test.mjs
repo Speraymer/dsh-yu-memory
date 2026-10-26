@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import vm from 'node:vm'
 
 // 2026-10-23 加：包名改了、前端注册名没改，会让 DSH 卡在 Loading plugins（重复注册）。
 // 以后改包名，这里必须同时绿。⚠️ 只认真正的调用，不认注释里的示例。
@@ -22,4 +23,17 @@ test('前端注册 id 必须等于包名', () => {
     }
   }
   assert.ok(找到 > 0, '没有找到真正的 __ModuleLoader__.load({ id: ... }) 注册点')
+})
+
+test('记忆图整层删除后，前端只挂「鱼的记忆」设置页', () => {
+  const source = readFileSync(join(根, 'client.js'), 'utf8')
+  let definition
+  vm.runInNewContext(source, {
+    window: { __ModuleLoader__: { load(value) { definition = value } } },
+  })
+  const plugin = definition.factory((id) => id === 'react' ? {} : undefined)
+  assert.deepEqual([...plugin.inject], ['slots'])
+  assert.match(source, /settings\.section/)
+  // 2026-10-27：主动那层（记忆图）已整层删除，前端不该再留任何挂载点或死代码。
+  assert.doesNotMatch(source, /applyMemoryGraph|memory-graph/)
 })

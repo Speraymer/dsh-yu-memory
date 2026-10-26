@@ -10,7 +10,9 @@ import {
 import { JsonStore } from './lib/store.mjs'
 import { loadHostDeps } from './lib/hostdeps.mjs'
 import { otherSiblings } from './lib/siblings.mjs'
-import { apply as applyMemoryGraph } from './lib/graph-host.mjs'
+// ⭐ 2026-10-27：记忆图（主动那层）按主人要求下线 —— 不挂载 /memory-graph，也不再提供注入接口。
+//    想恢复：git checkout 44f9cd4 -- index.js client.js
+// import { apply as applyMemoryGraph } from './lib/graph-host.mjs'
 import { isGraphInjected } from './lib/source.mjs'
 import {
   DEFAULT_CHAT_POLICY, addChatEntry, blankChatStore, decayChat, markChatPromoted, promotionCandidates,
@@ -154,11 +156,13 @@ async function askModel(ctx, agent, config, memory) {
 function toolResult(ok, message, extra = {}) { return { ok, message, ...extra } }
 
 export async function apply(ctx) {
-  try {
-    await applyMemoryGraph(ctx, { mountPrefix: '/memory-graph', trustedHosts: [], whyTools: false, whyPrompt: false })
-  } catch (error) {
-    diag(`memory graph unavailable error=${error?.message || error}`)
-  }
+  // ⭐ 2026-10-27：记忆图下线。原本这里挂载了 /memory-graph（画布 SPA + 注入接口），
+  //    现在不挂了 —— 被动那两层（长期记忆 / 对话记忆）照常跑。
+  // try {
+  //   await applyMemoryGraph(ctx, { mountPrefix: '/memory-graph', trustedHosts: [], whyTools: false, whyPrompt: false })
+  // } catch (error) {
+  //   diag(`memory graph unavailable error=${error?.message || error}`)
+  // }
   let store = files.read('store.json', blankStore())
   let config = files.read('config.json', blankConfig())
   let traces = files.read('traces.json', { version: 1, traces: [] })

@@ -1,7 +1,7 @@
 {
   "name": "dsh-yu-memory",
-  "version": "2.0.0",
-  "description": "DSH 统一记忆：跨会话长期记忆、会淡忘的对话记忆，以及连线即上下文的非线性记忆图。",
+  "version": "3.0.0",
+  "description": "DSH 统一记忆：跨会话长期记忆 + 会淡忘的对话记忆。",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -22,7 +22,6 @@
     "index.js",
     "client.js",
     "cordis.patch.yml",
-    "graph-app",
     "lib",
     "CHANGELOG.md",
     "README.md",
