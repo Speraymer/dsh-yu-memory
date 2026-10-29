@@ -1,5 +1,9 @@
 # dsh-yu-memory
 
+## 给 Agent 的安装与验收
+
+执行 `dsh plugin --profile desktop add github:Speraymer/dsh-yu-memory`，重启 DSH 后确认“设置 → 鱼的记忆”出现，并运行 `dsh --profile desktop --dump-config`。安装和升级都不得删除或覆盖 `~/.dsh/global-memory/`。
+
 DSH 的统一记忆插件：跨会话长期记忆 + 会淡忘的对话记忆。两层都是被动的 —— 自动记、自动淡忘、自动召回，不用手动操作。
 
 > 2026-10-27：原来还有第三层「非线性记忆图」（主动那层：自己连线决定这一轮看什么）。

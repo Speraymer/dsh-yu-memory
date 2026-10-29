@@ -1,6 +1,6 @@
 {
   "name": "dsh-yu-memory",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "DSH 统一记忆：跨会话长期记忆 + 会淡忘的对话记忆。",
   "license": "MIT",
   "repository": {
@@ -41,13 +41,7 @@
     },
     "client": {
       "platform": "web",
-      "inject": [
-        "slots",
-        "@deepseek-ai/dsh-client-modules",
-        "@deepseek-ai/dsh-api-session-controller",
-        "@deepseek-ai/dsh-client-connection",
-        "@deepseek-ai/dsh-client-ui-workspace"
-      ],
+      "inject": ["slots"],
       "external": [
         "react"
       ]

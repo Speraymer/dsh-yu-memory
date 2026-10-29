@@ -14,6 +14,7 @@ import { otherSiblings } from './lib/siblings.mjs'
 //    想恢复：git checkout 44f9cd4 -- index.js client.js
 // import { apply as applyMemoryGraph } from './lib/graph-host.mjs'
 import { isGraphInjected } from './lib/source.mjs'
+import { trustedRequestOrigin } from './lib/http.mjs'
 import {
   DEFAULT_CHAT_POLICY, addChatEntry, blankChatStore, decayChat, markChatPromoted, promotionCandidates,
   recallChat, renderChatRecall, renderPromotionHint,
@@ -383,6 +384,9 @@ export async function apply(ctx) {
 
   const handle = async (req, res, url) => {
     const path = url.pathname
+    if (req.method !== 'GET' && !trustedRequestOrigin(req)) {
+      return sendJson(res, 403, { ok: false, error: '请求来源不匹配' })
+    }
     if (req.method === 'GET' && path === '/api/dsh-global-memory/status') {
       const archived = archivedIds(ctx)
       const sessions = [...agentsBySession].map(([id, agent]) => ({
